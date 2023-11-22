@@ -1,0 +1,24 @@
+# Rime dictionary
+# encoding: utf-8
+# license: CC-BY-SA 4.0+
+
+
+---
+name: moran_fixed_simp
+version: "20231029"
+sort: original
+columns:
+  - code
+  - text
+  - weight
+  - comment
+encoder:
+  rules:
+    - length_equal: 2
+      formula: "AaAbBaBb"
+    - length_equal: 3
+      formula: "AaBaCaCb"
+    - length_in_range: [4, 32]
+      formula: "AaBaCaZa"
+...
+

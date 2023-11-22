@@ -1,0 +1,18 @@
+# Rime dictionary
+# encoding: utf-8
+# 資料來源：https://github.com/HCLonely/pcr-dict
+# 使用 OpenCC 繁體化。
+# ⚠ 該詞庫中有一些詞不能自動編碼，在編譯過程中會報錯。
+# 依原許可協議（MIT license）再發行
+
+---
+name: moran.priconne
+version: "20230830+31430ec"
+sort: by_weight
+use_preset_vocabulary: false
+columns:
+  - text
+  - weight
+...
+
+

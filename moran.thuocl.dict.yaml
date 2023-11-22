@@ -1,0 +1,14 @@
+﻿# Rime dictionary
+# encoding: utf-8
+
+# 整理自清華大學開放中文詞庫
+# http://thuocl.thunlp.org/
+# 依詞庫原許可協議再發行
+
+---
+name: moran.thuocl
+version: "20230904"
+sort: by_weight
+use_preset_vocabulary: false
+...
+

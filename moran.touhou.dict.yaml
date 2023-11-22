@@ -1,0 +1,32 @@
+# Rime dictionary
+# encoding: utf-8
+# 東方 Project 詞庫
+
+# 資料來源：
+#  - https://zh.wikipedia.org/wiki/%E6%9D%B1%E6%96%B9Project%E7%B3%BB%E5%88%97%E8%A7%92%E8%89%B2%E5%88%97%E8%A1%A8
+#  - https://thwiki.cc/%E5%AE%98%E6%96%B9%E8%A7%92%E8%89%B2%E5%88%97%E8%A1%A8
+# 使用 OpenCC 繁體化，可能有誤。該部分數據釋出到公共域。
+
+# 部分資料來自於 https://www.kdocs.cn/view/l/ci0NVcfTrlxU
+# 使用 OpenCC 繁體化，可能有誤。
+# 該部分數據依原許可協議「可以转载，但不得用于商业用途」再發行。
+#----------------------------------------------------------------
+# 扩展词库功能。可能有些你行也专业术语加进来。不建议加过多，可能会有bug
+#----------------------------------------------------------------
+#词加...下面
+#格式直接放汉字词就可以。后面可以跟tab符加序数。也可以不加。不用打拼音或双拼。系统会生成
+#同行	500
+#同行
+---
+name: moran.touhou
+version: "20230920"
+sort: by_weight
+use_preset_vocabulary: false
+columns:
+  - text
+  - weight
+...
+
+龙行词
+龙行词	500
+

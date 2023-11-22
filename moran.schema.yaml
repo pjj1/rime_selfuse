@@ -1,0 +1,314 @@
+schema:
+  schema_id: moran
+  name: 汉心默认
+  version: "0.1"
+  icon: "hanxinkuaida.ico"           # string 方案图标，格式： .ico
+  ascii_icon: "aaa.ico"           # string 方案图标，格式： .ico
+  author:
+    - 汉心快打
+    - 方案製作：ksqsf
+  description: |
+    汉心输入法
+  dependencies:
+    - moran_fixed
+    - moran_sentence
+    - moran_reverse
+    - moran_english
+    #- moran_japanese # 日語混輸
+    - stroke
+    - tiger
+    - cangjie5
+    - zrlf
+
+switches:
+  - name: ascii_mode
+    states: [ 中文, 西文 ]
+  - name: full_shape
+    states: [ 半角, 全角 ]
+  - name: simplification
+    states: [ 漢字, 汉字 ]
+  - name: ascii_punct
+    states: [ 。，, ．， ]
+  - options: [ utf8, gbk+emoji, big5+emoji ]
+    reset: 0
+    states: [ UTF-8, GBK, BIG5 ]
+  - name: flexible
+    states: [ 固詞, 動詞 ] # 「固詞」表示「固頂詞」
+    reset: 1
+  - name: emoji
+    reset: 0
+    states: [ 🈚, 🈶 ]
+  - name: unicode_comment
+    states: [ U關, U開 ]
+  - options: [ std_opencc,  std_tw, std_hk, std_dzing ]
+    states: [ 通, 臺, 港, 寍 ]
+
+engine:
+  processors:
+    - key_binder
+    - lua_processor@*moran_semicolon_processor
+    - ascii_composer
+    - recognizer
+    - speller
+    - punctuator
+    - lua_processor@*moran_launcher     # 輸入 打开官网，oguanwang
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - reverse_lookup_translator@reverse_universal
+    - reverse_lookup_translator@reverse_tiger
+    - reverse_lookup_translator@reverse_stroke
+    - reverse_lookup_translator@reverse_cangjie5
+    - reverse_lookup_translator@reverse_zrlf
+    - table_translator@custom_phrase       # 自定義短語
+    - table_translator@english             # 英語混輸
+    #- table_translator@japanese            # 日語混輸
+    - lua_translator@*moran_express_translator@with_reorder # 翻譯器
+    - lua_translator@*moran_shijian        # 日期orq 節氣ojq 星期oxq 時間osj
+    - lua_translator@*moran_number         # 數字轉大寫
+  filters:
+    - lua_filter@*moran_reorder_filter
+    - simplifier@emoji
+    - charset_filter@gbk+emoji
+    - charset_filter@big5+emoji
+    - simplifier@std_hk
+    - simplifier@std_tw
+    - simplifier@std_dzing
+    - simplifier
+    - lua_filter@*moran_charset_comment_filter  # Unicode 區位提示
+    - lua_filter@*moran_unicode_display_filter  # Unicode 編碼提示
+    - uniquifier
+
+speller:
+  alphabet: abcdefghijklmnopqrstuvwxyz
+  delimiter: " '"
+  algebra:
+    #- derive/^i/c/  # 这里ch和c的模糊音，下面类推，开了模糊音，打长句会不准。尽量不开或少开模糊音.用哪个就把前面的“#”号删了，重新部署就可以用了。
+    #- derive/^c/i/  # 模糊音 c ch
+    #- derive/^v/z/  # 模糊音 zh z
+    #- derive/^z/v/  # 模糊音 z zh
+    #- derive/^u/s/  # 模糊音 sh s
+    #- derive/^s/u/  # 模糊音 s sh
+    #- derive/^l/n/  # 模糊音 l n
+    #- derive/^n/l/  # 模糊音 n l
+    #- derive/^h/f/  # 模糊音 h f
+    #- derive/^f/h/  # 模糊音 f h
+    #- derive/^hv/fw/  # 模糊音 hui fei 自然需要改 hv 和  fz 
+    #- derive/^fw/hv/  # 模糊音  fei  hui 自然需要改 fz 和 hv 
+    #- derive/^([qtypdjlxbnm])k;/$1b;/   # 模糊音 ing 和 in 自然 是需要改k改成y，b改成n
+    #- derive/^([qtypdjlxbnm])b;/$1k;/   # 模糊音 in 和 ing  自然 是需要改k改成y，b改成n
+    #- derive/^([rmnuhivwbfzdglpckst])f;/$1g;/   # 模糊音 en 和 eng 
+    #- derive/^([rmnuhivwbfzdglpckst])g;/$1f;/   # 模糊音 eng 和 en
+
+    - derive/^(\w+);(\w)(\w)$/$1$2$3n/ # 全碼 YYXX 这里主要是5码字在词前的功能。这里的字母可以根据自己的需要改 3后面的字母n可以换成其他的
+    - derive/^(\w+);(\w)(\w)$/$1$2$3nn/ # 全碼 YYXXo
+    - derive/^(\w+);(\w)(\w)$/$1$2$3l/ # 全碼 YYXXo
+    - derive/^(\w+);(\w)(\w)$/$1$2$3ll/ # 全碼 YYXXo
+    - derive/^(\w+);(\w)(\w)$/$1$2$3s/ # 全碼 YYXXo
+    - derive/^(\w+);(\w)(\w)$/$1$2$3ss/ # 全碼 YYXXo
+    #- derive/^(\w+);(\w)(\w)$/$1$2$3/  # 降低 YYXX 優先級 启用模糊音可能要用的，一般不用动也可以
+    - abbrev/^(\w+);(\w)(\w)$/$1$2$3/  # 降低 YYXX 優先級 原先的模式
+    - derive/^(\w+);(\w)(\w)$/$1$2/    # 構詞可以用 YYX
+    - derive/^(\w+);(\w)(\w)$/$1/      # 構詞可以用 YY
+    #- abbrev/^([a-z]).+$/$1/           # 首字母簡拼（※ 嚴重影響出字速度，不建議開啓）
+
+
+
+ascii_composer:
+  switch_key:
+    Shift_L: commit_code
+
+translator:    # 整句輸入模式設置，在 top_translator 中被調用
+  dictionary: moran.extended
+  prism: moran    # 这里是开模糊音需要隐藏的
+  initial_quality: 5
+  max_homophones: 7
+  spelling_hints: 3
+  contextual_suggestions: true
+  preedit_format:
+    - xform/([a-z][a-z][a-z][a-z])o/$1°/
+
+fixed:         # 固頂輸入模式設置，在 top_translator 中被調用
+  initial_quality: 100
+  dictionary: moran_fixed
+  enable_completion: false
+  enable_sentence: false
+  enable_user_dict: false
+  enable_encoder: false
+  encode_commit_history: true
+
+custom_phrase: # 自定義短語
+  dictionary: ""
+  user_dict: moran_custom_phrases
+  db_class: stabledb
+  enable_completion: false
+  enable_sentence: false
+  initial_quality: 1000
+
+english:
+  dictionary: moran_english
+  enable_completion: true
+  enable_sentence: false
+  enable_user_dict: true
+  initial_quality: 1
+  enable_encoder: false
+  encode_commit_history: false
+  comment_format:
+    - xform/.*//
+
+japanese:
+  dictionary: moran_japanese
+  enable_completion: false
+  enable_sentence: true
+  enable_user_dict: true
+  initial_quality: 0
+  enable_encoder: false
+  encode_commit_history: false
+  comment_format:
+    - xform/.*//
+
+emoji:
+  opencc_config: moran_emoji.json
+  option_name: emoji
+  tips: none
+
+std_hk:
+  opencc_config: t2hk.json
+  option_name: std_hk
+  #tips: all
+
+std_tw:
+  opencc_config: t2tw.json
+  option_name: std_tw
+  #tips: all
+
+std_dzing:
+  opencc_config: moran_dzing.json
+  option_name: std_dzing
+  tips: all
+
+reverse_format:
+  comment_format:
+    - xform/(\w\w);(\w\w)/$1[$2]/
+  preedit_format:
+    - xform/^o(lf|bh|cj)//
+
+reverse_tiger:
+  tag: reverse_tiger
+  dictionary: tiger
+  enable_completion: true
+  prefix: "`"
+  tips: 〔冷僻字-辅形首尾加笔画hspdz打冷僻字。全拼加辅打繁体字，需先F4选2，切换到繁体〔漢字〕模式〕
+  __include: reverse_format
+
+reverse_universal:
+  tag: reverse_universal
+  dictionary: moran.chars
+  tips: 〔通配〕
+  __include: reverse_format
+
+reverse_stroke:
+  tag: reverse_stroke
+  dictionary: stroke
+  prefix: "obh"
+  enable_completion: true
+  tips: 〔橫h豎s撇p捺n折z〕
+  __include: reverse_format
+
+reverse_cangjie5:
+  tag: reverse_cangjie5
+  dictionary: cangjie5
+  prefix: "ocj"
+  enable_completion: true
+  tips: 〔倉頡五代〕
+  __include: reverse_format
+
+reverse_zrlf:
+  tag: reverse_zrlf
+  dictionary: zrlf
+  prefix: "olf"
+  enable_completion: true
+  tips: 〔两分-把字分两块-打各一块的全拼，比如“𢯊”就是打shoude〕
+  __include: reverse_format
+
+reverse_lookup:
+  extra_tags:
+    - reverse_tiger
+    - reverse_universal
+    - reverse_stroke
+    - reverse_cangjie5
+    - reverse_zrlf
+
+punctuator:
+  import_preset: symbols
+
+key_binder:
+  import_preset: default
+  bindings:
+    - {when: has_menu, accept: "Control+s", toggle: simplification}
+    - {when: has_menu, accept: "Control+u", toggle: unicode_comment}
+    - {when: has_menu, accept: "Control+q", toggle: emoji}  # q 表示表情，讓出 Ctrl+e
+    - {when: has_menu, accept: "Control+Shift+0", toggle: std_opencc}
+    #- {when: has_menu, accept: semicolon, send: "2"}   # 被 moran_semicolon_processor 替換
+    - {when: has_menu, accept: "Tab", send: "Control+Right"}
+    - {when: composing, accept: "Tab", send: "Control+Right"}
+    - {when: has_menu, accept: Shift+A, send_sequence: "{Control+Left}a{Control+Right}"}
+    - {when: has_menu, accept: Shift+B, send_sequence: "{Control+Left}b{Control+Right}"}
+    - {when: has_menu, accept: Shift+C, send_sequence: "{Control+Left}c{Control+Right}"}
+    - {when: has_menu, accept: Shift+D, send_sequence: "{Control+Left}d{Control+Right}"}
+    - {when: has_menu, accept: Shift+E, send_sequence: "{Control+Left}e{Control+Right}"}
+    - {when: has_menu, accept: Shift+F, send_sequence: "{Control+Left}f{Control+Right}"}
+    - {when: has_menu, accept: Shift+G, send_sequence: "{Control+Left}g{Control+Right}"}
+    - {when: has_menu, accept: Shift+H, send_sequence: "{Control+Left}h{Control+Right}"}
+    - {when: has_menu, accept: Shift+I, send_sequence: "{Control+Left}i{Control+Right}"}
+    - {when: has_menu, accept: Shift+J, send_sequence: "{Control+Left}j{Control+Right}"}
+    - {when: has_menu, accept: Shift+K, send_sequence: "{Control+Left}k{Control+Right}"}
+    - {when: has_menu, accept: Shift+L, send_sequence: "{Control+Left}l{Control+Right}"}
+    - {when: has_menu, accept: Shift+M, send_sequence: "{Control+Left}m{Control+Right}"}
+    - {when: has_menu, accept: Shift+N, send_sequence: "{Control+Left}n{Control+Right}"}
+    - {when: has_menu, accept: Shift+O, send_sequence: "{Control+Left}o{Control+Right}"}
+    - {when: has_menu, accept: Shift+P, send_sequence: "{Control+Left}p{Control+Right}"}
+    - {when: has_menu, accept: Shift+Q, send_sequence: "{Control+Left}q{Control+Right}"}
+    - {when: has_menu, accept: Shift+R, send_sequence: "{Control+Left}r{Control+Right}"}
+    - {when: has_menu, accept: Shift+S, send_sequence: "{Control+Left}s{Control+Right}"}
+    - {when: has_menu, accept: Shift+T, send_sequence: "{Control+Left}t{Control+Right}"}
+    - {when: has_menu, accept: Shift+U, send_sequence: "{Control+Left}u{Control+Right}"}
+    - {when: has_menu, accept: Shift+V, send_sequence: "{Control+Left}v{Control+Right}"}
+    - {when: has_menu, accept: Shift+W, send_sequence: "{Control+Left}w{Control+Right}"}
+    - {when: has_menu, accept: Shift+X, send_sequence: "{Control+Left}x{Control+Right}"}
+    - {when: has_menu, accept: Shift+Y, send_sequence: "{Control+Left}y{Control+Right}"}
+    - {when: has_menu, accept: Shift+Z, send_sequence: "{Control+Left}z{Control+Right}"}
+    - {when: has_menu, accept: Shift+BackSpace, send_sequence: "{Control+Left}{BackSpace}{Control+Right}"}
+
+recognizer:
+  import_preset: default
+  patterns:
+    reverse_universal: "(^(`[a-z`]+))|(^([a-z]{2}(`[a-z`]?|[a-z`]`)))"
+    reverse_tiger: "(^`$)|(^`[a-zA-Z]+$)"
+    reverse_stroke: "^obh[A-Za-z]*$"
+    reverse_cangjie5: "^ocj[A-Za-z]*$"
+    reverse_zrlf: "^olf[A-Za-z]*$"
+    punct: '^/([0-9]0?|[A-Za-z]+)$'
+
+moran:  # 兜底默認值；以防用戶不提供任何值
+  quick_code_indicator: "⚡️"
+  enable_word_filter: false
+  ijrq:
+    enable: true
+    #defer: 5
+    show_hint: false
+    suffix: 'o'
+
+__patch:
+  - moran.defaults.yaml:/patch?
+  - moran_patches.yaml:/fix_opencc_t2s?
+  - moran.custom.yaml:/patch?
+
